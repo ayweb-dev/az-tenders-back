@@ -140,12 +140,12 @@ export const googleAuthCallback = (req, res) => {
   // Vérifiez si l'utilisateur a complété son profil
   if (!req.user.tel || !req.user.wilaya) {
     return res.redirect(
-      `http://localhost:4173/CompleteProfile?userId=${req.user._id}`
+      `http://az-tenders/CompleteProfile?userId=${req.user._id}`
     );
   }
 
   const token = signToken(req.user._id);
-  res.redirect(`http://localhost:4173/UserHome?token=${token}`);
+  res.redirect(`http://az-tenders/UserHome?token=${token}`);
 };
 
 // // Fonction pour afficher le formulaire de complétion du profil
