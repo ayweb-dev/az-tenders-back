@@ -1,13 +1,14 @@
-import jwt from "jsonwebtoken";
+import axios from "axios";
 import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 import passport from "passport";
-import dotenv from 'dotenv';
-dotenv.config();
+import "../middlewares/passport.js";
 import { User } from "../models/userModel.js";
+dotenv.config();
 // import { JWT_SECRET, JWT_EXPIRES_IN } from "../config.js";
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
-import "../middlewares/passport.js";
 
 const signToken = (id) => {
   return jwt.sign({ id }, JWT_SECRET, {
@@ -28,6 +29,21 @@ export const signup = async (req, res) => {
     ) {
       return res.status(400).send({
         message: "Champ manquant !",
+      });
+    }
+
+    const { recaptchaToken } = req.body;
+    // Vérifiez la réponse reCAPTCHA
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
+
+    const response = await axios.post(verificationUrl);
+    const { success } = response.data;
+
+    if (!success) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Échec de la vérification reCAPTCHA",
       });
     }
 
@@ -63,12 +79,25 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-
+  const { email, password, recaptchaToken } = req.body;
   if (!email || !password) {
     return res.status(400).json({
       status: "fail",
-      message: "Please provide email and password!",
+      message: "Veuillez completer les champs!",
+    });
+  }
+
+  // Vérifiez la réponse reCAPTCHA
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
+
+  const response = await axios.post(verificationUrl);
+  const { success } = response.data;
+
+  if (!success) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Échec de la vérification reCAPTCHA",
     });
   }
 
@@ -77,7 +106,7 @@ export const login = async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     return res.status(401).json({
       status: "fail",
-      message: "Incorrect email or password",
+      message: "email ou mot de passe incorrecte",
     });
   }
 
@@ -110,11 +139,13 @@ export const googleAuth = passport.authenticate("google", {
 export const googleAuthCallback = (req, res) => {
   // Vérifiez si l'utilisateur a complété son profil
   if (!req.user.tel || !req.user.wilaya) {
-    return res.redirect(`https://az-tenders.com/CompleteProfile?userId=${req.user._id}`);
+    return res.redirect(
+      `http://localhost:4173/CompleteProfile?userId=${req.user._id}`
+    );
   }
 
   const token = signToken(req.user._id);
-  res.redirect(`https://az-tenders.com/UserHome?token=${token}`);
+  res.redirect(`http://localhost:4173/UserHome?token=${token}`);
 };
 
 // // Fonction pour afficher le formulaire de complétion du profil

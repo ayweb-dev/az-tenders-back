@@ -4,6 +4,7 @@ import { Sector } from "../models/sectorModel.js";
 import { Subscription } from "../models/subscriptionModel.js";
 import { Tender } from "../models/tenderModel.js";
 import { User } from "../models/userModel.js";
+import emailQueue from "../utils/emailSender.js";
 
 //****************************************************************
 // ************* Tenders controllers *****************************
@@ -39,7 +40,7 @@ export const addTender = async (req, res) => {
     ) {
       return res.status(400).json({
         status: "fail",
-        message: req.body,
+        message: "Champ manquant !",
       });
     }
 
@@ -51,18 +52,6 @@ export const addTender = async (req, res) => {
         status: "fail",
         message:
           "La date d'échéance ne peut pas être inférieure à la date de début",
-      });
-    }
-
-    //incrémenter le nbrTenders de l'admin
-    const userAdder = await User.findById(req.user._id);
-    if (userAdder) {
-      userAdder.nbrTenders += 1;
-      await userAdder.save();
-    } else {
-      return res.status(400).json({
-        status: "fail",
-        message: "Administrateur introuvable",
       });
     }
 
@@ -83,6 +72,42 @@ export const addTender = async (req, res) => {
     // Sauvegarde dans la base de données
     const savedTender = await newTender.save();
 
+    // Incrémenter le nbrTenders de l'admin
+    const userAdder = await User.findById(req.user._id);
+    if (userAdder) {
+      userAdder.nbrTenders += 1;
+      await userAdder.save();
+    } else {
+      return res.status(400).json({
+        status: "fail",
+        message: "Administrateur introuvable",
+      });
+    }
+
+    // Récupération des abonnés des secteurs concernés
+    const subscriptions = await Subscription.find({
+      sectors: { $in: sectors },
+      status: "updated",
+    }).populate("user");
+
+    if (subscriptions) {
+      // Utilisation d'un Set pour éviter les doublons
+      const emailsToSend = new Set();
+
+      subscriptions.forEach((subscription) => {
+        const user = subscription.user;
+
+        if (!emailsToSend.has(user.email)) {
+          emailsToSend.add(user.email);
+
+          emailQueue.add({
+            email: user.email,
+            subject: `AZ Tenders : nouvelle annonce dans un secteur auquel vous êtes abonné `,
+            text: `Nous vous invitons à consulter la nouvelle annonce  "${title}"... Veuillez vérifier les détails sur le site.`,
+          });
+        }
+      });
+    }
     // Réponse de succès
     res.status(201).json({
       status: "success",
