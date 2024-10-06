@@ -31,7 +31,7 @@ app.use(
   cors({
     //origin: "http://localhost:5173",
     // origin: "http://localhost:4173",
-    origin: "https://az-tenders.com",
+    origin: ["https://az-tenders.com","https://api.az-tenders.com"],
     methods: ["GET", "PUT", "DELETE", "POST", "PATCH", "HEAD", "OPTION"],
   })
 );
