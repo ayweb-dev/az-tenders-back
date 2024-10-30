@@ -23,10 +23,11 @@ export const addTender = async (req, res) => {
       dateEchehance,
       wilaya,
       sectors,
+      imageUrl,
     } = req.body;
 
     // Vérification de l'upload de l'image
-    const imageUrl = req.file ? req.file.path : null;
+    // const imageUrl = req.file ? req.file.path : null;
 
     // Validation des champs requis
     if (

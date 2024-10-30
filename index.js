@@ -59,6 +59,10 @@ app.use(
     reportUri: "/csp-violation-report-endpoint",
   })
 );
+app.use((req, res, next) => {
+  req.setTimeout(300000); // Timeout de 5 minutes (300000 ms)
+  next();
+});
 
 app.use("/admin", adminRoutes);
 app.use("/auth", authRoutes);

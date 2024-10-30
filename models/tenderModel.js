@@ -13,6 +13,8 @@ const tenderSchema = mongoose.Schema(
     },
     anep: {
       type: String,
+      unique: true,
+      required: true,
     },
     journal: {
       type: String,

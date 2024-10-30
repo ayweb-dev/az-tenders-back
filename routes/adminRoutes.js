@@ -73,7 +73,6 @@ router.delete("/abonnement/:id", protect, restrictTo("admin", "super admin"), de
 router.get("/abonnements", getSubscriptions);
 router.get("/abo/:id", protect, restrictTo("admin", "super admin"), getSingleSubscriptions);
 
-
 //Messages
 router.post("/msg", addMessage);
 router.get("/messages", protect, restrictTo("admin", "super admin"), getMessages);
