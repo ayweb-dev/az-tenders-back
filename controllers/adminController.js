@@ -483,6 +483,10 @@ export const deleteUser = async (req, res) => {
         message: "Utilisateur non trouvé",
       });
     }
+
+    // Supprime tous les abonnements associés à l'utilisateur
+    await Subscription.deleteMany({ user: req.params.id });
+    
     res.status(200).json({
       status: "success",
       message: "Utilisateur supprimé avec succès",
@@ -637,17 +641,6 @@ export const updateSubscription = async (req, res) => {
       });
     }
 
-    const AlreaySubscribed = await Subscription.findOne({
-      user: userId,
-      status: "updated",
-    });
-    if (AlreaySubscribed) {
-      return res.status(400).send({
-        status: "fail",
-        message: `L'utilisateur ${user.nom} ${user.prenom} possède déjà un abonnement ${AlreaySubscribed.type} en cours.`,
-      });
-    }
-
     // Vérification des secteurs
     const validSectors = await Sector.find({ _id: { $in: sectors } });
     if (validSectors.length !== sectors.length) {
@@ -660,7 +653,6 @@ export const updateSubscription = async (req, res) => {
     // Mise à jour de l'abonnement
     const subscription = await Subscription.findOne({
       user: userId,
-      status: "asked",
     });
 
     subscription.user = userId;

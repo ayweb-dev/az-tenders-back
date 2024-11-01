@@ -41,11 +41,11 @@ import upload from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 
 //Tender routes
-router.post("/tender", protect, upload.single("image"), addTender); //add a new tender
+router.post("/tender", protect, addTender); //add a new tender
 router.get("/tenders", getTenders); //récupérer tous les tenders
 router.post("/getByIds",protect, getTendersByIds); //récupérer tous les tenders
 router.get("/tend/:id", protect, restrictTo("admin", "super admin"), getSingleTender);
-router.put("/tender/:id", upload.single("image"), updateTender); // Update a specific tender
+router.put("/tender/:id", updateTender); // Update a specific tender
 router.delete("/tender/:id", protect, restrictTo("admin", "super admin"), deleteTender); //delete a specific tender
 
 //Secteur routes
